@@ -1,7 +1,8 @@
 const snoowrap = require('snoowrap');
 require('dotenv').config();
 
-async function scrapeWSB(data) {
+async function scrapeWSB() {
+    let data = [];
     const req = new snoowrap({
         userAgent: 'user agent',
         clientId: process.env.CLIENT_ID,
@@ -11,21 +12,27 @@ async function scrapeWSB(data) {
     });
 
     // req.getHot().map(post => post.title).then(console.log);
-    await req.getSubreddit('wallstreetbets').getHot({time: 'hour'})
-    .then(listing => {
-       listing.forEach(sub => sub.expandReplies({limit: 1, depth: 0})
-        .then(c => c.comments.forEach(comment => { 
-            // console.log(comment.body)
-            data.push(comment.body)
-        })))
-    })
+    const listings = await req.getSubreddit('wallstreetbets').getHot({time: 'hour'});
 
-    return data
+    let allComments = [];
+    let expandedPromises = [];
+    for (const listing of listings)
+    {
+        expandedPromises.push(listing.expandReplies({limit: 1, depth: 0}));
+    }
+
+    for await (let expandedListing of expandedPromises)
+    {
+        const comments = expandedListing.comments;
+        comments.forEach(comment => allComments.push(comment.body));
+    }
+
+    return allComments;
 }
 
 function countInstances(comments, ticker) {
     let count = 0;
-    const regex = new RegExp(ticker, 'g');
+    const regex = new RegExp(` ${ticker} `, 'ig');
     for (const comment of comments) {
        count += (comment.match(regex) || []).length;
     }

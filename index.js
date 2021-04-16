@@ -5,13 +5,16 @@ const {scrapeWSB, countInstances} = require('./scraper');
 const str = "this is a string";
 
 
-let results = []
+let results = [];
+let count = 0;
 app.get('/' ,(req, res) => {
-    res.send(results);
+    res.send({'count': count, 'comments': results});
 })
 
 app.get('/scrape', async (req, res) =>  {
-    results = await scrapeWSB(results);
+    let results = await scrapeWSB();
+    count = countInstances(results, 'GME');
+    res.send({'count': count, 'comments': results});
 });
 
 app.listen(3000, () => {
