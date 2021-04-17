@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 const {scrapeWSB, countInstances} = require('./scraper');
+const cron = require('node-cron');
 const Ticker = require('./models/ticker');
 
 mongoose.connect('mongodb://localhost:27017/wsbScraper', {useNewUrlParser: true, useUnifiedTopology: true})
@@ -13,11 +14,7 @@ mongoose.connect('mongodb://localhost:27017/wsbScraper', {useNewUrlParser: true,
     console.log(err);
 });
 
-app.get('/' ,(req, res) => {
-    res.send('Home directory');
-})
-
-app.get('/scrape', async (req, res) =>  {
+cron.schedule('* * * * *', async () => {
     const results = await scrapeWSB();
     const count = countInstances(results, 'GME');
     let date = new Date();
@@ -26,8 +23,16 @@ app.get('/scrape', async (req, res) =>  {
     ticker.save()
     .then(data => console.log(`added ${data} to DB`))
     .catch(console.log);
-    res.send({'count': count, 'comments': results});
 });
+
+app.get('/' ,(req, res) => {
+    res.send('Home directory');
+})
+
+// app.get('/scrape', async (req, res) =>  {
+    
+//     res.send({'count': count, 'comments': results});
+// });
 
 app.listen(3000, () => {
     console.log('listening on port 3000');

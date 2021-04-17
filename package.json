@@ -9,6 +9,7 @@
     "express": "^4.17.1",
     "jslint": "^0.12.1",
     "mongoose": "^5.12.4",
+    "node-cron": "^3.0.0",
     "nodemon": "^2.0.7",
     "snoowrap": "^1.22.0"
   },
