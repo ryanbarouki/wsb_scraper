@@ -12,7 +12,16 @@ async function scrapeWSB() {
     });
 
     // req.getHot().map(post => post.title).then(console.log);
-    const listings = await req.getSubreddit('wallstreetbets').getHot({time: 'hour'});
+    let listigns = [];
+    try
+    {
+        listings = await req.getSubreddit('wallstreetbets').getHot({time: 'hour'});
+    }
+    catch (e) 
+    {
+        console.log(e);
+        return listings;
+    }
 
     let allComments = [];
     let expandedPromises = [];

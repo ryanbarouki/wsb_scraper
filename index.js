@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 const {scrapeWSB, countInstances} = require('./scraper');
+const Ticker = require('./models/ticker');
 
 mongoose.connect('mongodb://localhost:27017/wsbScraper', {useNewUrlParser: true, useUnifiedTopology: true})
 .then(() => {
@@ -12,15 +13,19 @@ mongoose.connect('mongodb://localhost:27017/wsbScraper', {useNewUrlParser: true,
     console.log(err);
 });
 
-let results = [];
-let count = 0;
 app.get('/' ,(req, res) => {
-    res.send({'count': count, 'comments': results});
+    res.send('Home directory');
 })
 
 app.get('/scrape', async (req, res) =>  {
-    let results = await scrapeWSB();
-    count = countInstances(results, 'GME');
+    const results = await scrapeWSB();
+    const count = countInstances(results, 'GME');
+    let date = new Date();
+    const timeNow = date.getTime();
+    const ticker = new Ticker({name: 'GME', count: count, time: timeNow})
+    ticker.save()
+    .then(data => console.log(`added ${data} to DB`))
+    .catch(console.log);
     res.send({'count': count, 'comments': results});
 });
 

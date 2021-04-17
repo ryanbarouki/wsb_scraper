@@ -6,6 +6,9 @@ const tickerSchema = new mongoose.Schema({
     },
     count: {
         type: Number
+    },
+    time: {
+        type: Date
     }
 });
 
