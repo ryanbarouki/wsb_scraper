@@ -27,13 +27,26 @@ cron.schedule('* * * * *', async () => {
 
 app.get('/' ,(req, res) => {
     res.send('Home directory');
-})
+});
+
+app.get('/getData', async (req, res) => {
+    // send back data from db
+    const condition = {"name": {$regex: 'GME', $options : 'i'}}
+    const results = await Ticker.find(condition);
+    let x = [];
+    let y = [];
+    results.forEach(entry => {
+        x.push(entry.time);
+        y.push(entry.count);
+    })
+    res.send({y: y, x: x});
+});
 
 // app.get('/scrape', async (req, res) =>  {
     
 //     res.send({'count': count, 'comments': results});
 // });
 
-app.listen(3000, () => {
-    console.log('listening on port 3000');
+app.listen(5000, () => {
+    console.log('listening on port 5000');
 });
