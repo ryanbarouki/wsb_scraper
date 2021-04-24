@@ -34,7 +34,7 @@ function LineChart({data}) {
     useEffect(() => {
         setSeries(series => ([
                 {
-                    name : 'Sample data',
+                    name : 'mentions',
                     data : data
                 }
             ]))
