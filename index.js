@@ -33,13 +33,13 @@ app.get('/getData', async (req, res) => {
     // send back data from db
     const condition = {"name": {$regex: 'GME', $options : 'i'}}
     const results = await Ticker.find(condition);
-    let x = [];
-    let y = [];
-    results.forEach(entry => {
-        x.push(entry.time);
-        y.push(entry.count);
+    let data = [];
+    let min = new Date('April 23, 2021');
+    filteredResults = results.filter(entry => new Date(entry.time).getTime() > min.getTime())
+    filteredResults.forEach(entry => {
+        data.push({x: new Date(entry.time).getTime(), y:entry.count});
     })
-    res.send({y: y, x: x});
+    res.send({data: data});
 });
 
 // app.get('/scrape', async (req, res) =>  {

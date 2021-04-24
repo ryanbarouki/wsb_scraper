@@ -4,14 +4,14 @@ import {useState, useEffect} from 'react'
 
 function App() {
   const [data, setData] = useState([]);
-  const [categories, setCat] = useState([]);
+//   const [categories, setCat] = useState([]);
 
   useEffect(() => {
 	async function fetchData() {
 		const rawData = await fetch('/getData');
 		const jsonData = await rawData.json();
-		setData(jsonData.y);
-		setCat(jsonData.x);
+		setData(jsonData.data);
+		// setCat(jsonData.x);
 	}
 	fetchData();
   }, []);
@@ -20,7 +20,7 @@ function App() {
           <p>
             Wall Street Bets Scraper with React.js!
           </p>
-          <LineChart data={data} categories={categories}/>
+          <LineChart data={data}/>
         </div>
   );
 }

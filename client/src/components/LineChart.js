@@ -1,9 +1,8 @@
 import React, { useState, useEffect} from 'react'
 import Chart from 'react-apexcharts'
 
-function LineChart({data, categories}) {
+function LineChart({data}) {
     console.log(data);
-    console.log(categories);
     const [options, setOptions] = useState({
                 chart: {
                     background: '#282c34',
@@ -15,11 +14,14 @@ function LineChart({data, categories}) {
                         show: false
                     }
                 },
+                stroke: {
+                    curve: 'smooth'
+                },
                 xaxis: {
-                    categories: categories
+                    type: 'numeric'
                 },
                 title: {
-                    text: 'Chart title',
+                    text: 'GME mentions over time',
                     align: 'center',
                     margin: 20,
                     offsetY: 20,
@@ -30,11 +32,6 @@ function LineChart({data, categories}) {
             });
     const [series, setSeries] = useState([]);
     useEffect(() => {
-        setOptions(options => ({...options, xaxis: {
-            categories: categories
-            } 
-        }))
-
         setSeries(series => ([
                 {
                     name : 'Sample data',
@@ -42,13 +39,13 @@ function LineChart({data, categories}) {
                 }
             ]))
 
-    },[data, categories])
+    },[data])
     return (<Chart 
         options = {options}
         series = {series}
         type='line'
         height = '450'
-        width = '100%'
+        width = '1000'
     />);
 }
 
