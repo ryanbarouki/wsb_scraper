@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
-const {scrapeWSB, countInstances} = require('./scraper');
+const {scrapeWSB, countInstances, findTickers} = require('./scraper');
 const cron = require('node-cron');
 const Ticker = require('./models/ticker');
 
@@ -14,16 +14,19 @@ mongoose.connect('mongodb://localhost:27017/wsbScraper', {useNewUrlParser: true,
     console.log(err);
 });
 
-cron.schedule('* * * * *', async () => {
-    const results = await scrapeWSB();
-    const count = countInstances(results, 'GME');
-    let date = new Date();
-    const timeNow = date.getTime();
-    const ticker = new Ticker({name: 'GME', count: count, time: timeNow})
-    ticker.save()
-    .then(data => console.log(`added ${data} to DB`))
-    .catch(console.log);
-});
+// cron.schedule('* * * * *', async () => {
+//     const results = await scrapeWSB();
+//     const count = countInstances(results, 'GME');
+//     let date = new Date();
+//     const timeNow = date.getTime();
+//     const ticker = new Ticker({name: 'GME', count: count, time: timeNow})
+//     ticker.save()
+//     .then(data => console.log(`added ${data} to DB`))
+//     .catch(console.log);
+// });
+cron.schedule('0 * * * *', async () => {
+    await findTickers();
+})
 
 app.get('/' ,(req, res) => {
     res.send('Home directory');
@@ -42,6 +45,10 @@ app.get('/getData', async (req, res) => {
     res.send({data: data});
 });
 
+app.get('/test', async (req, res) => {
+    const results = await findTickers();
+    res.send(results);
+});
 // app.get('/scrape', async (req, res) =>  {
     
 //     res.send({'count': count, 'comments': results});
