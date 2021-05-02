@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors');
 const path = require('path');
-const {scrapeWSB, countInstances, findTickers} = require('./scraper');
+const {scrapeWSB, countInstances, findTickers, validateTickers} = require('./scraper');
 const cron = require('node-cron');
 const Ticker = require('./models/ticker');
 const TickerName = require('./models/ticker_name');
@@ -41,9 +41,15 @@ app.use(cors(corsOptions));
 //     .then(data => console.log(`added ${data} to DB`))
 //     .catch(console.log);
 // });
+let unvalidatedTickers = new Set();
+cron.schedule('5,35 * * * *', async () => {
+    const newUnvalidatedTickers = await findTickers();
+    newUnvalidatedTickers.forEach(ticker => unvalidatedTickers.add(ticker));
+})
 
+const REQUEST_LIMIT = 5;
 cron.schedule('* * * * *', async () => {
-    await findTickers();
+    await validateTickers(unvalidatedTickers, REQUEST_LIMIT);
 })
 
 app.get('/getTicker/:ticker', async (req, res) => {
