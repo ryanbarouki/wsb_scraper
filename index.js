@@ -24,6 +24,7 @@ mongoose.connect('mongodb://localhost:27017/wsbScraper', {useNewUrlParser: true,
 //     .then(data => console.log(`added ${data} to DB`))
 //     .catch(console.log);
 // });
+
 cron.schedule('0 * * * *', async () => {
     await findTickers();
 })
