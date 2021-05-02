@@ -89,8 +89,8 @@ async function findTickers() {
                 // if ticker is not in db, save it with a count of 1
                 if (result === null && validatorCount < REQUEST_LIMIT) {
                     isValidTicker = await validTicker(ticker);
+                    validatorCount += 1;
                     if (isValidTicker) {
-                        validatorCount += 1;
                         ticker_dict[ticker] = 1;
                         const new_ticker = new TickerName({name: ticker});
                         await new_ticker.save();
@@ -117,9 +117,9 @@ async function findTickers() {
                 else if (validatorCount < REQUEST_LIMIT) 
                 {
                     const isValidTicker = await validTicker(word);
+                    validatorCount += 1;
                     if (isValidTicker)
                     {
-                        validatorCount += 1;
                         ticker_dict[word] = 1;
                         const new_ticker = new TickerName({ name: word });
                         await new_ticker.save()
@@ -143,8 +143,9 @@ async function validTicker(ticker)
         const request = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${process.env.API_KEY}`)
         const JSONdata = await request.json();
         const data = JSON.parse(JSON.stringify(JSONdata));
-        if (request.status == 200 && 'Global Quote' in data && data['Global Quote'] !== {})
+        if (request.status == 200 && 'Global Quote' in data && Object.keys(data['Global Quote']).length !== 0)
         {
+            console.log('VALID TICKER!')
             return true;
         }
     }

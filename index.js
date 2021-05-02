@@ -6,6 +6,7 @@ const path = require('path');
 const {scrapeWSB, countInstances, findTickers} = require('./scraper');
 const cron = require('node-cron');
 const Ticker = require('./models/ticker');
+const TickerName = require('./models/ticker_name');
 
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/wsbScraper', {useNewUrlParser: true, useUnifiedTopology: true})
 .then(() => {
@@ -45,17 +46,24 @@ cron.schedule('* * * * *', async () => {
     await findTickers();
 })
 
-app.get('/getData', async (req, res) => {
+app.get('/getTicker/:ticker', async (req, res) => {
     // send back data from db
-    const condition = {"name": {$regex: 'GME', $options : 'i'}}
-    const results = await Ticker.find(condition);
+    // const condition = {"name": {$regex: 'GME', $options : 'i'}}
+    const results = await Ticker.find({name: req.params.ticker});
     let data = [];
-    let min = new Date('April 23, 2021');
-    filteredResults = results.filter(entry => new Date(entry.time).getTime() > min.getTime())
-    filteredResults.forEach(entry => {
+    // let min = new Date('April 23, 2021');
+    // filteredResults = results.filter(entry => new Date(entry.time).getTime() > min.getTime())
+    results.forEach(entry => {
         data.push({x: new Date(entry.time).getTime(), y:entry.count});
     })
     res.send({data: data});
+});
+
+app.get('/getTickerList', async (req, res) => {
+    const tickers = await TickerName.find({});
+    let data = [];
+    tickers.forEach(ticker => data.push(ticker.name));
+    res.send({tickers: data});
 });
 
 app.get('/test', async (req, res) => {

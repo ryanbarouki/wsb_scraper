@@ -2,8 +2,27 @@
 .App {
   text-align: center;
 }
+
+html{
+  min-height: 100%;
+  background-color: #282c34;
+}
+
+div.container
+{
+  background-color: #282c34;
+  max-width: 100%;
+}
+
 p {
   color: white;
+}
+
+h1 
+{
+  color: white;
+  padding-top: 1em;
+  padding-bottom: 0.5em;
 }
 
 .App-logo {
