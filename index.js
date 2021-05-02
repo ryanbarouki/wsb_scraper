@@ -41,7 +41,7 @@ app.use(cors(corsOptions));
 //     .catch(console.log);
 // });
 
-cron.schedule('0 * * * *', async () => {
+cron.schedule('* * * * *', async () => {
     await findTickers();
 })
 

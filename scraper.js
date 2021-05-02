@@ -89,8 +89,8 @@ async function findTickers() {
                 // if ticker is not in db, save it with a count of 1
                 if (result === null && validatorCount < REQUEST_LIMIT) {
                     isValidTicker = await validTicker(ticker);
-                    validatorCount++;
                     if (isValidTicker) {
+                        validatorCount += 1;
                         ticker_dict[ticker] = 1;
                         const new_ticker = new TickerName({name: ticker});
                         await new_ticker.save();
@@ -117,9 +117,9 @@ async function findTickers() {
                 else if (validatorCount < REQUEST_LIMIT) 
                 {
                     const isValidTicker = await validTicker(word);
-                    validatorCount++;
                     if (isValidTicker)
                     {
+                        validatorCount += 1;
                         ticker_dict[word] = 1;
                         const new_ticker = new TickerName({ name: word });
                         await new_ticker.save()
