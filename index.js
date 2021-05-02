@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
+const cors = require('cors');
+const path = require('path');
 const {scrapeWSB, countInstances, findTickers} = require('./scraper');
 const cron = require('node-cron');
 const Ticker = require('./models/ticker');
@@ -13,7 +15,21 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/wsbScrape
     console.log("Oh no Mongo connection error!");
     console.log(err);
 });
-
+// ** MIDDLEWARE ** //
+const whitelist = ['http://localhost:3000', 'http://localhost:5000', 'https://reddit-stonks.herokuapp.com/'];
+const corsOptions = {
+    origin: function (origin, callback) {
+        console.log("** Origin of request " + origin)
+        if (whitelist.indexOf(origin) !== -1 || !origin) {
+            console.log("Origin acceptable")
+            callback(null, true)
+        } else {
+            console.log("Origin rejected")
+            callback(new Error('Not allowed by CORS'))
+        }
+    }
+}
+app.use(cors(corsOptions));
 // cron.schedule('* * * * *', async () => {
 //     const results = await scrapeWSB();
 //     const count = countInstances(results, 'GME');
@@ -28,10 +44,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/wsbScrape
 cron.schedule('0 * * * *', async () => {
     await findTickers();
 })
-
-app.get('/' ,(req, res) => {
-    res.send('Home directory');
-});
 
 app.get('/getData', async (req, res) => {
     // send back data from db
@@ -52,10 +64,11 @@ app.get('/test', async (req, res) => {
 });
 
 if (process.env.NODE_ENV === 'production') {
-    // set static folder
-    app.use(express.static('client/build'));
+    // Serve any static files
+    app.use(express.static(path.join(__dirname, 'client/build')));
+    // Handle React routing, return all requests to React app
     app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+        res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
     });
 }
 
