@@ -2,7 +2,7 @@ const snoowrap = require('snoowrap');
 const fetch = require("node-fetch");
 const TickerName = require('./models/ticker_name');
 const Ticker = require('./models/ticker')
-
+const REQUEST_LIMIT = 5;
 require('dotenv').config();
 
 async function scrapeWSB() {
@@ -76,6 +76,7 @@ async function findTickers() {
 
     // Now to parse all the text for tickers
     // start by looking for $-formatted tickers
+    let validatorCount = 0;
     let ticker_dict = {};
     for (const text of allText) {
         if (text == null) continue;
@@ -86,8 +87,9 @@ async function findTickers() {
                 // should check if ticker is in DB
                 const result = await TickerName.findOne({ name: ticker });
                 // if ticker is not in db, save it with a count of 1
-                if (result === null) {
+                if (result === null && validatorCount < REQUEST_LIMIT) {
                     isValidTicker = await validTicker(ticker);
+                    validatorCount++;
                     if (isValidTicker) {
                         ticker_dict[ticker] = 1;
                         const new_ticker = new TickerName({name: ticker});
@@ -112,9 +114,10 @@ async function findTickers() {
                 {
                     ticker_dict[word] = ticker_dict[word] ? ticker_dict[word] + 1 : 1;
                 }
-                else 
+                else if (validatorCount < REQUEST_LIMIT) 
                 {
                     const isValidTicker = await validTicker(word);
+                    validatorCount++;
                     if (isValidTicker)
                     {
                         ticker_dict[word] = 1;
@@ -137,12 +140,9 @@ async function validTicker(ticker)
 {
     if (ticker.length <= 5)
     {
-        if (validTicker.prevRequest !== undefined && 'Note' in validTicker.prevRequest) return false;
         const request = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${process.env.API_KEY}`)
-        console.log(request);
         const JSONdata = await request.json();
         const data = JSON.parse(JSON.stringify(JSONdata));
-        validTicker.prevRequest = data;
         if (request.status == 200 && 'Global Quote' in data && data['Global Quote'] !== {})
         {
             return true;
