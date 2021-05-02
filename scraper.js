@@ -2,6 +2,7 @@ const snoowrap = require('snoowrap');
 const fetch = require("node-fetch");
 const TickerName = require('./models/ticker_name');
 const Ticker = require('./models/ticker')
+const InvalidTicker = require('./models/invalid_ticker')
 require('dotenv').config();
 
 async function scrapeWSB() {
@@ -81,16 +82,18 @@ async function findTickers() {
         indexOfDollar = text.indexOf('$') // note this only finds the first $ per text line
         if (indexOfDollar != -1) {
             const ticker = extractTicker(text, indexOfDollar)
-            if (ticker !== null) {
+            const invalidWord = await InvalidTicker.findOne({name: ticker});
+            if (ticker !== null && invalidWord === null) {
                 // should check if ticker is in DB
                 const result = await TickerName.findOne({ name: ticker });
-                // if ticker is not in db, save it to be validated later
-                if (result === null) {
-                    unvalidatedTickers.add(ticker);
+                console.log(result);
+                // only count validated tickers in the DB
+                if (result !== null) {
+                    ticker_dict[ticker] = ticker_dict[ticker] ? ticker_dict[ticker] + 1 : 1;
                 }
                 else {
-                    // only count validated tickers in the DB
-                    ticker_dict[ticker] = ticker_dict[ticker] ? ticker_dict[ticker] + 1 : 1;
+                // if ticker is not in db, save it to be validated later
+                    unvalidatedTickers.add(ticker);
                 }
             }
         }
@@ -99,7 +102,8 @@ async function findTickers() {
     for (const text of allText) {
         splitText = text.split(" ");
         for (const word of splitText) {
-            if (word.length > 1 && word.length <= 5 && allLetter(word) && word == word.toUpperCase()) {
+            const invalidWord = await InvalidTicker.findOne({name: word});
+            if (word.length > 1 && word.length <= 5 && allLetter(word) && word == word.toUpperCase() && invalidWord === null) {
                 const result = await TickerName.findOne({ name: word });
                 if (result !== null) {
                     ticker_dict[word] = ticker_dict[word] ? ticker_dict[word] + 1 : 1;
@@ -117,28 +121,44 @@ async function findTickers() {
     return unvalidatedTickers;
 }
 
-async function validateTickers(tickers, limit) {
-    for (let i = 0; i < limit; i++) {
-        const ticker = tickers[i];
-        const validTicker = await validTicker(ticker);
-        if (validTicker) {
-            const new_ticker = new TickerName({ name: ticker });
-            await new_ticker.save();
-        }
-    }
-}
 
 async function validTicker(ticker) {
     if (ticker.length <= 5) {
         const request = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${process.env.API_KEY}`)
         const JSONdata = await request.json();
         const data = JSON.parse(JSON.stringify(JSONdata));
+        console.log(data);
         if (request.status == 200 && 'Global Quote' in data && Object.keys(data['Global Quote']).length !== 0) {
             console.log('VALID TICKER!')
             return true;
         }
+        else if ('Information' in data || 'Note' in data)
+        {
+            return null;
+        }
     }
     return false;
+}
+async function validateTickers(tickers, limit) {
+    let count = 0;
+    for (let ticker of tickers) {
+        console.log(ticker);
+        if (count >= limit) return tickers;
+        const valid = await validTicker(ticker);
+        if (valid == true) {
+            console.log('valid!')
+            const new_ticker = new TickerName({ name: ticker });
+            await new_ticker.save();
+        }
+        else if (valid == false) {
+            console.log('invalid!')
+            const newInvalidTicker = new InvalidTicker({name: ticker});
+            await newInvalidTicker.save();
+        }
+        tickers.delete(ticker);
+        count += 1;
+    }
+    return tickers;
 }
 
 function extractTicker(text, indexOfDollar) {
