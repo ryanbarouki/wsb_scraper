@@ -7,43 +7,6 @@ const { parse } = require('dotenv');
 
 require('dotenv').config();
 
-async function scrapeWSB() {
-    let data = [];
-    const req = new snoowrap({
-        userAgent: 'user agent',
-        clientId: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
-        username: process.env.REDDIT_USER,
-        password: process.env.REDDIT_PASS
-    });
-
-    let listigns = [];
-    try
-    {
-        listings = await req.getSubreddit('wallstreetbets').getNew({time: 'hour'});
-    }
-    catch (e) 
-    {
-        console.log(e);
-        return [];
-    }
-
-    let allComments = [];
-    let expandedPromises = [];
-    for (const listing of listings)
-    {
-        expandedPromises.push(listing.expandReplies({limit: 1, depth: 0}));
-    }
-
-    for await (let expandedListing of expandedPromises)
-    {
-        const comments = expandedListing.comments;
-        comments.forEach(comment => allComments.push(comment.body));
-    }
-
-    return allComments;
-}
-
 async function findTickers() {
     const reddit = new snoowrap({
         userAgent: 'user agent',
@@ -122,7 +85,6 @@ async function findTickers() {
     return unvalidatedTickers;
 }
 
-
 async function validTicker(ticker) {
     if (ticker.length <= 5) {
         const request = await fetch(`https://sandbox.tradier.com/v1/markets/lookup?q=${ticker}`, 
@@ -130,16 +92,22 @@ async function validTicker(ticker) {
         const JSONdata = await request.json();
         const data = JSON.parse(JSON.stringify(JSONdata));
         if (request.status == 200 && data.securities !== null) {
-            return true;
+            const companies = data.securities.security;
+            if (Array.isArray(companies)) {
+                const filteredCompanies = companies.filter(company => company.symbol === ticker);
+                if (filteredCompanies.length !== 0) {
+                    return true;
+                }
+            }
+            else if (companies.symbol === ticker) {
+                return true;
+            }
         }
         // need to figure what happens when you exhaust the requests per min
-        // else if ('Information' in data || 'Note' in data)
-        // {
-        //     return null;
-        // }
     }
     return false;
 }
+
 async function validateTickers(tickers, limit) {
     let count = 0;
     for (let ticker of tickers) {
@@ -149,12 +117,13 @@ async function validateTickers(tickers, limit) {
         if (valid == true) {
             const new_ticker = new TickerName({ name: ticker });
             await new_ticker.save();
+            tickers.delete(ticker);
         }
         else if (valid == false) {
-            const newInvalidTicker = new InvalidTicker({name: ticker});
+            const newInvalidTicker = new InvalidTicker({ name: ticker });
             await newInvalidTicker.save();
+            tickers.delete(ticker);
         }
-        tickers.delete(ticker);
         count += 1;
     }
     return tickers;
@@ -187,13 +156,4 @@ function allLetter(word){
     return (/^[A-Za-z]+$/).test(word);
 }
 
-function countInstances(comments, ticker) {
-    let count = 0;
-    const regex = new RegExp(` ${ticker} `, 'ig');
-    for (const comment of comments) {
-       count += (comment.match(regex) || []).length;
-    }
-    return count;
-}
-
-module.exports = {scrapeWSB, countInstances, findTickers, validateTickers};
+module.exports = {findTickers, validateTickers};

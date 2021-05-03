@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 
 const tickerNameSchema = new mongoose.Schema({
     name: {
-        type: String
+        type: String,
+        unique: true
     }
 });
 

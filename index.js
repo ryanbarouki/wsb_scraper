@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors');
 const path = require('path');
-const {scrapeWSB, countInstances, findTickers, validateTickers} = require('./scraper');
+const {findTickers, validateTickers} = require('./scraper');
 const cron = require('node-cron');
 const Ticker = require('./models/ticker');
 const TickerName = require('./models/ticker_name');
@@ -31,16 +31,7 @@ const corsOptions = {
     }
 }
 app.use(cors(corsOptions));
-// cron.schedule('* * * * *', async () => {
-//     const results = await scrapeWSB();
-//     const count = countInstances(results, 'GME');
-//     let date = new Date();
-//     const timeNow = date.getTime();
-//     const ticker = new Ticker({name: 'GME', count: count, time: timeNow})
-//     ticker.save()
-//     .then(data => console.log(`added ${data} to DB`))
-//     .catch(console.log);
-// });
+
 let unvalidatedTickers = new Set();
 cron.schedule('*/10 * * * *', async () => {
     const newUnvalidatedTickers = await findTickers();
@@ -72,10 +63,6 @@ app.get('/getTickerList', async (req, res) => {
     res.send({tickers: data});
 });
 
-app.get('/test', async (req, res) => {
-    const results = await findTickers();
-    res.send(results);
-});
 
 if (process.env.NODE_ENV === 'production') {
     // Serve any static files
