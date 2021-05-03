@@ -81,6 +81,7 @@ async function findTickers() {
     for (const ticker in ticker_dict) {
         const tick = new Ticker({ name: ticker, count: ticker_dict[ticker], time: new Date().getTime() })
         await tick.save();
+        const update = await TickerName.findOneAndUpdate({name: ticker}, {$inc: {total: ticker_dict[ticker]}})
     }
     return unvalidatedTickers;
 }
@@ -111,11 +112,10 @@ async function validTicker(ticker) {
 async function validateTickers(tickers, limit) {
     let count = 0;
     for (let ticker of tickers) {
-        console.log(ticker);
         if (count >= limit) return tickers;
         const valid = await validTicker(ticker);
         if (valid == true) {
-            const new_ticker = new TickerName({ name: ticker });
+            const new_ticker = new TickerName({ name: ticker, total: 1 });
             await new_ticker.save();
             tickers.delete(ticker);
         }

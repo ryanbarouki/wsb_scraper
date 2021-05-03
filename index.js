@@ -59,7 +59,8 @@ app.get('/getTicker/:ticker', async (req, res) => {
 app.get('/getTickerList', async (req, res) => {
     const tickers = await TickerName.find({});
     let data = [];
-    tickers.forEach(ticker => data.push(ticker.name));
+    tickers.forEach(ticker => data.push({name: ticker.name, total: ticker.total}));
+	data.sort((a,b) => b.total - a.total);
     res.send({tickers: data});
 });
 

@@ -18,7 +18,8 @@ function App() {
 		fetchTickers();
 	}, []);
 	let tickerDropdown = [];
-	tickers.forEach(ticker => tickerDropdown.push(<Dropdown.Item onClick={() => {setChosenTicker(ticker)}}>{ticker}</Dropdown.Item>))
+	console.log(tickers);
+	tickers.forEach(ticker => tickerDropdown.push(<Dropdown.Item onClick={() => {setChosenTicker(ticker.name)}}>{ticker.name}</Dropdown.Item>))
 
 	useEffect(() => {
 		async function fetchData() {
