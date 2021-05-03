@@ -129,9 +129,7 @@ async function validTicker(ticker) {
         {method: 'GET', headers: {Authorization: `Bearer ${process.env.API_KEY}`, Accept: 'application/json'}})
         const JSONdata = await request.json();
         const data = JSON.parse(JSON.stringify(JSONdata));
-        console.log(data);
         if (request.status == 200 && data.securities !== null) {
-            console.log('VALID TICKER!')
             return true;
         }
         // need to figure what happens when you exhaust the requests per min
@@ -149,12 +147,10 @@ async function validateTickers(tickers, limit) {
         if (count >= limit) return tickers;
         const valid = await validTicker(ticker);
         if (valid == true) {
-            console.log('valid!')
             const new_ticker = new TickerName({ name: ticker });
             await new_ticker.save();
         }
         else if (valid == false) {
-            console.log('invalid!')
             const newInvalidTicker = new InvalidTicker({name: ticker});
             await newInvalidTicker.save();
         }
