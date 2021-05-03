@@ -3,6 +3,8 @@ const fetch = require("node-fetch");
 const TickerName = require('./models/ticker_name');
 const Ticker = require('./models/ticker')
 const InvalidTicker = require('./models/invalid_ticker')
+const { parse } = require('dotenv');
+
 require('dotenv').config();
 
 async function scrapeWSB() {
@@ -86,7 +88,6 @@ async function findTickers() {
             if (ticker !== null && invalidWord === null) {
                 // should check if ticker is in DB
                 const result = await TickerName.findOne({ name: ticker });
-                console.log(result);
                 // only count validated tickers in the DB
                 if (result !== null) {
                     ticker_dict[ticker] = ticker_dict[ticker] ? ticker_dict[ticker] + 1 : 1;
@@ -124,18 +125,20 @@ async function findTickers() {
 
 async function validTicker(ticker) {
     if (ticker.length <= 5) {
-        const request = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${process.env.API_KEY}`)
+        const request = await fetch(`https://sandbox.tradier.com/v1/markets/lookup?q=${ticker}`, 
+        {method: 'GET', headers: {Authorization: `Bearer ${process.env.API_KEY}`, Accept: 'application/json'}})
         const JSONdata = await request.json();
         const data = JSON.parse(JSON.stringify(JSONdata));
         console.log(data);
-        if (request.status == 200 && 'Global Quote' in data && Object.keys(data['Global Quote']).length !== 0) {
+        if (request.status == 200 && data.securities !== null) {
             console.log('VALID TICKER!')
             return true;
         }
-        else if ('Information' in data || 'Note' in data)
-        {
-            return null;
-        }
+        // need to figure what happens when you exhaust the requests per min
+        // else if ('Information' in data || 'Note' in data)
+        // {
+        //     return null;
+        // }
     }
     return false;
 }

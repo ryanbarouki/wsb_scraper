@@ -42,12 +42,12 @@ app.use(cors(corsOptions));
 //     .catch(console.log);
 // });
 let unvalidatedTickers = new Set();
-cron.schedule('*/2 * * * *', async () => {
+cron.schedule('*/10 * * * *', async () => {
     const newUnvalidatedTickers = await findTickers();
     newUnvalidatedTickers.forEach(ticker => unvalidatedTickers.add(ticker));
 })
 
-const REQUEST_LIMIT = 5;
+const REQUEST_LIMIT = 50;
 cron.schedule('* * * * *', async () => {
     unvalidatedTickers = await validateTickers(unvalidatedTickers, REQUEST_LIMIT);
 })
