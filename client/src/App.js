@@ -7,7 +7,7 @@ import Dropdown from 'react-bootstrap/Dropdown'
 function App() {
 	const [data, setData] = useState([]);
 	const [tickers, setTickers] = useState([]);
-	const [chosenTicker, setChosenTicker] = useState('');
+	const [chosenTicker, setChosenTicker] = useState('Stock');
 	//   const [categories, setCat] = useState([]);	§
 	useEffect(() => {
 		async function fetchTickers() {

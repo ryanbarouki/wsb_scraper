@@ -18,15 +18,20 @@ function LineChart({data, ticker}) {
                     curve: 'smooth'
                 },
                 xaxis: {
-                    type: 'numeric'
+                    type: 'datetime'
                 },
                 title: {
-                    text: `${ticker} mentions over time`,
+                    text: `Stock mentions over time`,
                     align: 'center',
                     margin: 20,
                     offsetY: 20,
                     style: {
                         fontSize: "25px"
+                    }
+                },
+                tooltip: {
+                    x: {
+                      format: 'dd MMM yyyy'
                     }
                 }
             });
